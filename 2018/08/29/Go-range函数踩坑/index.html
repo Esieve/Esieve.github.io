@@ -51,16 +51,17 @@
   };
 </script>
 
-  <meta name="description" content="🐛🐛🐛">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Esieve&#39;s blog">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;2018&#x2F;10&#x2F;index.html">
+  <meta name="description" content="range函数返回的是变量的副本，而不是引用 12345678910111213141516171819package mainimport &quot;fmt&quot;func main() &amp;#123;   a := make([]int, 0)   a = append(a, 1)   a = append(a, 1)   a = append(a, 1)   fmt.Println(a)   for _,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go range函数踩坑">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2018&#x2F;08&#x2F;29&#x2F;Go-range%E5%87%BD%E6%95%B0%E8%B8%A9%E5%9D%91&#x2F;index.html">
 <meta property="og:site_name" content="Esieve&#39;s blog">
-<meta property="og:description" content="🐛🐛🐛">
+<meta property="og:description" content="range函数返回的是变量的副本，而不是引用 12345678910111213141516171819package mainimport &quot;fmt&quot;func main() &amp;#123;   a := make([]int, 0)   a = append(a, 1)   a = append(a, 1)   a = append(a, 1)   fmt.Println(a)   for _,">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-07T14:49:42.316Z">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://yoursite.com/archives/2018/10/">
+<link rel="canonical" href="http://yoursite.com/2018/08/29/Go-range%E5%87%BD%E6%95%B0%E8%B8%A9%E5%9D%91/">
 
 
 <script id="page-configurations">
@@ -68,13 +69,13 @@
   CONFIG.page = {
     sidebar: "",
     isHome: false,
-    isPost: false,
+    isPost: true,
     isPage: false,
-    isArchive: true
+    isArchive: false
   };
 </script>
 
-  <title>归档 | Esieve's blog</title>
+  <title>Go range函数踩坑 | Esieve's blog</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151881949-1"></script>
     <script>
@@ -200,49 +201,100 @@
           <div class="content">
             
 
+  <div class="posts-expand">
+      
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">嗯..! 目前共计 1 篇日志。 继续努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/29/Go-range%E5%87%BD%E6%95%B0%E8%B8%A9%E5%9D%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go range函数踩坑
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-08-29 22:48:00" itemprop="dateCreated datePublished" datetime="2018-08-29T22:48:00+08:00">2018-08-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-07 22:49:42" itemprop="dateModified" datetime="2019-12-07T22:49:42+08:00">2019-12-07</time>
+              </span>
+
+          
+            <span id="/2018/08/29/Go-range%E5%87%BD%E6%95%B0%E8%B8%A9%E5%9D%91/" class="post-meta-item leancloud_visitors" data-flag-title="Go range函数踩坑" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <h1 class="collection-header">2018</h1>
+        <p>range函数返回的是变量的副本，而不是引用</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>)</span><br><span class="line">   a = <span class="built_in">append</span>(a, <span class="number">1</span>)</span><br><span class="line">   a = <span class="built_in">append</span>(a, <span class="number">1</span>)</span><br><span class="line">   a = <span class="built_in">append</span>(a, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">   fmt.Println(a)</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> _, value := <span class="keyword">range</span> a &#123;</span><br><span class="line">      value = <span class="number">2</span></span><br><span class="line">      fmt.Println(value)</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   fmt.Println(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 这段代码slice a的值并不会真正修改，输出结果为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[1 1 1]</span><br><span class="line">2</span><br><span class="line">2</span><br><span class="line">2</span><br><span class="line">[1 1 1]</span><br></pre></td></tr></table></figure>
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+    
+    
+    
 
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-10-21T20:46:25+08:00"
-              content="2018-10-21">
-          10-21
-        </time>
-      </div>
+      <footer class="post-footer">
 
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/10/21/hello-world/" itemprop="url">
-            <span itemprop="name">Hello World</span>
-          </a>
-      </h2>
+        
 
-    </header>
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2018/08/24/getContextPath%E3%80%81getServletPath%E3%80%81getRequestURI%E7%9A%84%E5%8C%BA%E5%88%AB/" rel="next" title="getContextPath、getServletPath、getRequestURI的区别">
+                  <i class="fa fa-chevron-left"></i> getContextPath、getServletPath、getRequestURI的区别
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2018/09/07/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/" rel="prev" title="Raft协议为何只能有奇数个节点">
+                  Raft协议为何只能有奇数个节点 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
   </article>
+  
+  
+  
 
-
-    </div>
   </div>
-  
-  
-  
-
-  
-
 
 
           </div>
@@ -286,21 +338,15 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">1</span>
-        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
