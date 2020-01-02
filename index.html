@@ -157,11 +157,6 @@
     <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
-
-  </li>
         <li class="menu-item menu-item-categories">
 
     <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
@@ -205,6 +200,275 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/" class="post-title-link" itemprop="url">Spring Boot日志系统改造与源码</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-23 11:34:00" itemprop="dateCreated datePublished" datetime="2019-12-23T11:34:00+08:00">2019-12-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Boot日志系统改造与源码" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>首页我们需要看下Spring Boot是如何加载不同的日志系统。加载的启动类是<code>LoggingApplicationListener</code>，这里重写了程序启动的一些事件。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(ApplicationEvent event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationStartingEvent) &#123;</span><br><span class="line">        onApplicationStartingEvent((ApplicationStartingEvent) event);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationEnvironmentPreparedEvent) &#123;</span><br><span class="line">        onApplicationEnvironmentPreparedEvent(</span><br><span class="line">                (ApplicationEnvironmentPreparedEvent) event);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationPreparedEvent) &#123;</span><br><span class="line">        onApplicationPreparedEvent((ApplicationPreparedEvent) event);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ContextClosedEvent &amp;&amp; ((ContextClosedEvent) event)</span><br><span class="line">            .getApplicationContext().getParent() == <span class="keyword">null</span>) &#123;</span><br><span class="line">        onContextClosedEvent();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationFailedEvent) &#123;</span><br><span class="line">        onApplicationFailedEvent();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>已<code>onApplicationStartingEvent</code>函数为例，方法从<code>LoggingSystem</code>获取日志系统。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationStartingEvent</span><span class="params">(ApplicationStartingEvent event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.loggingSystem = LoggingSystem</span><br><span class="line">            .get(event.getSpringApplication().getClassLoader());</span><br><span class="line">    <span class="keyword">this</span>.loggingSystem.beforeInitialize();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>LoggingSystem</code>定义了一些常用的日志系统，这个是固定的无法修改，我们在使用的时候根据引用的依赖控制。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    Map&lt;String, String&gt; systems = <span class="keyword">new</span> LinkedHashMap&lt;&gt;();</span><br><span class="line">    systems.put(<span class="string">"ch.qos.logback.core.Appender"</span>,</span><br><span class="line">            <span class="string">"org.springframework.boot.logging.logback.LogbackLoggingSystem"</span>);</span><br><span class="line">    systems.put(<span class="string">"org.apache.logging.log4j.core.impl.Log4jContextFactory"</span>,</span><br><span class="line">            <span class="string">"org.springframework.boot.logging.log4j2.Log4J2LoggingSystem"</span>);</span><br><span class="line">    systems.put(<span class="string">"java.util.logging.LogManager"</span>,</span><br><span class="line">            <span class="string">"org.springframework.boot.logging.java.JavaLoggingSystem"</span>);</span><br><span class="line">    SYSTEMS = Collections.unmodifiableMap(systems);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里<code>get</code>方法定义了获取逻辑，可以看到，我们可以通过System Property的方式，自定义我们自己的日志系统，例如<code>System.setProperty(LoggingSystem.class.getName(), &quot;com.test.TestLoggingSystem&quot;);</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String SYSTEM_PROPERTY = LoggingSystem<span class="class">.<span class="keyword">class</span>.<span class="title">getName</span>()</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LoggingSystem <span class="title">get</span><span class="params">(ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">    String loggingSystem = System.getProperty(SYSTEM_PROPERTY);</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.hasLength(loggingSystem)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (NONE.equals(loggingSystem)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> NoOpLoggingSystem();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> get(classLoader, loggingSystem);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> SYSTEMS.entrySet().stream()</span><br><span class="line">            .filter((entry) -&gt; ClassUtils.isPresent(entry.getKey(), classLoader))</span><br><span class="line">            .map((entry) -&gt; get(classLoader, entry.getValue())).findFirst()</span><br><span class="line">            .orElseThrow(() -&gt; <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                    <span class="string">"No suitable logging system located"</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>文件系统的继承关系如下</p>
+<p><img src="https://i.loli.net/2019/12/23/RQEwS3lZC7zgVDu.png" alt="image.png"></p>
+<p>我们以<code>log4j</code>为例，可以看到默认实现是用<code>ResourceUtils</code>读取，这里我们就可以继承Log4J2LoggingSystem，去重写<code>loadConfiguration</code>方法，比如从zookeeper获取。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadDefaults</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></span><br><span class="line"><span class="function"><span class="params">        LogFile logFile)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (logFile != <span class="keyword">null</span>) &#123;</span><br><span class="line">        loadConfiguration(getPackagedConfigFile(<span class="string">"log4j2-file.xml"</span>), logFile);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        loadConfiguration(getPackagedConfigFile(<span class="string">"log4j2.xml"</span>), logFile);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadConfiguration</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></span><br><span class="line"><span class="function"><span class="params">        String location, LogFile logFile)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.loadConfiguration(initializationContext, location, logFile);</span><br><span class="line">    loadConfiguration(location, logFile);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadConfiguration</span><span class="params">(String location, LogFile logFile)</span> </span>&#123;</span><br><span class="line">    Assert.notNull(location, <span class="string">"Location must not be null"</span>);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        LoggerContext ctx = getLoggerContext();</span><br><span class="line">        URL url = ResourceUtils.getURL(location);</span><br><span class="line">        ConfigurationSource source = getConfigurationSource(url);</span><br><span class="line">        ctx.start(ConfigurationFactory.getInstance().getConfiguration(ctx, source));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                <span class="string">"Could not initialize Log4J2 logging from "</span> + location, ex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> ConfigurationSource <span class="title">getConfigurationSource</span><span class="params">(URL url)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    InputStream stream = url.openStream();</span><br><span class="line">    <span class="keyword">if</span> (FILE_PROTOCOL.equals(url.getProtocol())) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ConfigurationSource(stream, ResourceUtils.getFile(url));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ConfigurationSource(stream, url);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">Lettuce实践与部分源码分析</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-18 20:23:24" itemprop="dateCreated datePublished" datetime="2019-12-18T20:23:24+08:00">2019-12-18</time>
+            </span>
+
+          
+            <span id="/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Lettuce实践与部分源码分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Spring Boot提供了RedisTemplate对Jedis和Lettuce进行了封装，使得我们可以方便的对两种客户端进行使用和切换。</p>
+<p>Jedis 是直连模式，在多个线程间共享一个 Jedis 实例时是线程不安全的，如果想要在多线程环境下使用 Jedis，需要使用连接池，每个线程都去拿自己的 Jedis 实例，当连接数量增多时，物理连接成本就较高了。</p>
+<p>Lettuce的连接是基于Netty的，连接实例可以在多个线程间共享，所以，一个多线程的应用可以使用同一个连接实例，而不用担心并发线程的数量。当然这个也是可伸缩的设计，一个连接实例不够的情况也可以按需增加连接实例。</p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><ol>
+<li>Spring Boot通过在application.properties里添加配置，开启Lettuce客户端，<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">spring.redis.password=</span><br><span class="line">spring.redis.timeout=</span><br><span class="line">spring.redis.lettuce.pool.max-active=</span><br><span class="line">spring.redis.lettuce.pool.max-wait=</span><br><span class="line">spring.redis.lettuce.pool.max-idle=</span><br><span class="line">spring.redis.lettuce.pool.min-idle=</span><br><span class="line">spring.redis.lettuce.shutdown-timeout=</span><br><span class="line">spring.redis.cluster.nodes=</span><br><span class="line">spring.redis.cluster.max-redirects=</span><br></pre></td></tr></table></figure></li>
+<li>Spring Boot会在扫描配置的时候，提供默认的RedisConnectionFactory实现，这里我们可以重写定制更多策略，最后注入到RedisTemplate中<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ConditionalOnClass</span>(RedisClient<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">// <span class="title">application</span>.<span class="title">properties</span>中添加配置的才创建<span class="title">bean</span></span></span><br><span class="line"><span class="class">@<span class="title">ConditionalOnProperty</span>(<span class="title">prefix</span> </span>= <span class="string">"spring.redis"</span>, name = <span class="string">"cluster.nodes"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Duration DEFAULT_TIMEOUT = Duration.ofSeconds(<span class="number">10</span>);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Duration DEFAULT_REFRESH_PERIOD = Duration.ofSeconds(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span>(RedisTemplate<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">public</span> <span class="title">RedisTemplate</span>&lt;<span class="title">String</span>, <span class="title">Object</span>&gt; <span class="title">redisTemplate</span>(<span class="title">LettuceConnectionFactory</span> <span class="title">redisConnectionFactory</span>) </span>&#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; template = <span class="keyword">new</span> RedisTemplate&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        GenericGsonRedisSerializer redisSerializer = <span class="keyword">new</span> GenericGsonRedisSerializer();</span><br><span class="line">        template.setConnectionFactory(redisConnectionFactory);</span><br><span class="line">        template.setValueSerializer(redisSerializer);</span><br><span class="line">        template.setKeySerializer(<span class="keyword">new</span> StringRedisSerializer());</span><br><span class="line">        template.setHashValueSerializer(redisSerializer);</span><br><span class="line">        template.setHashKeySerializer(<span class="keyword">new</span> StringRedisSerializer());</span><br><span class="line">        template.afterPropertiesSet();</span><br><span class="line">        <span class="keyword">return</span> template;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span>(RedisConnectionFactory<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">public</span> <span class="title">LettuceConnectionFactory</span> <span class="title">redisConnectionFactory</span>(<span class="title">RedisProperties</span> <span class="title">properties</span>) </span>&#123;</span><br><span class="line">        LettuceConnectionFactory factory = <span class="keyword">new</span> LettuceConnectionFactory(getClusterConfiguration(properties), getClientConfiguration(properties));</span><br><span class="line">        <span class="comment">// 使用前先校验连接</span></span><br><span class="line">        factory.setValidateConnection(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">return</span> factory;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> RedisClusterConfiguration <span class="title">getClusterConfiguration</span><span class="params">(RedisProperties properties)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (properties.getCluster() == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        RedisProperties.Cluster clusterProperties = properties.getCluster();</span><br><span class="line">        RedisClusterConfiguration config = <span class="keyword">new</span> RedisClusterConfiguration(clusterProperties.getNodes());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (clusterProperties.getMaxRedirects() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            config.setMaxRedirects(clusterProperties.getMaxRedirects());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (properties.getPassword() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            config.setPassword(RedisPassword.of(properties.getPassword()));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> config;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> LettuceClientConfiguration <span class="title">getClientConfiguration</span><span class="params">(RedisProperties properties)</span> </span>&#123;</span><br><span class="line">        GenericObjectPoolConfig config = <span class="keyword">new</span> GenericObjectPoolConfig();</span><br><span class="line"></span><br><span class="line">        RedisProperties.Pool pool = properties.getLettuce().getPool();</span><br><span class="line"></span><br><span class="line">        config.setMaxTotal(pool.getMaxIdle());</span><br><span class="line">        config.setMaxIdle(pool.getMaxIdle());</span><br><span class="line">        config.setMinIdle(pool.getMinIdle());</span><br><span class="line">        config.setMaxWaitMillis(pool.getMaxWait().toMillis());</span><br><span class="line">        <span class="comment">// 取连接时校验</span></span><br><span class="line">        config.setTestOnBorrow(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">// 空闲时校验</span></span><br><span class="line">        config.setTestWhileIdle(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对于redis cluster，如果某个节点失效，我们需要配置定期刷新和适应性刷新，及时更新拓扑</span></span><br><span class="line">        ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()</span><br><span class="line">                .topologyRefreshOptions(ClusterTopologyRefreshOptions.builder()</span><br><span class="line">                        .enablePeriodicRefresh()</span><br><span class="line">                        .refreshPeriod(DEFAULT_REFRESH_PERIOD)</span><br><span class="line">                        .enableAllAdaptiveRefreshTriggers()</span><br><span class="line">                        .build())</span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> LettucePoolingClientConfiguration.builder()</span><br><span class="line">                .commandTimeout(properties.getTimeout() == <span class="keyword">null</span> ? DEFAULT_TIMEOUT : properties.getTimeout())</span><br><span class="line">                .poolConfig(config)</span><br><span class="line">                <span class="comment">// Lettuce提供了多种读取策略，我们可以从slave读，fallback到master，适合实时性要求不高，保证最终一致性</span></span><br><span class="line">                .readFrom(ReadFrom.REPLICA_PREFERRED)</span><br><span class="line">                .clientOptions(clusterClientOptions)</span><br><span class="line">                .build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><h3 id="默认RedisConnectionFactory"><a href="#默认RedisConnectionFactory" class="headerlink" title="默认RedisConnectionFactory"></a>默认RedisConnectionFactory</h3>spring-boot-autoconfigure会创建一个默认的RedisConnectionFactory，在LettuceConnectionConfiguration类里<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span>(RedisConnectionFactory<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> <span class="title">LettuceConnectionFactory</span> <span class="title">redisConnectionFactory</span>(<span class="title">ClientResources</span> <span class="title">clientResources</span>)</span></span><br><span class="line"><span class="class">        <span class="title">throws</span> <span class="title">UnknownHostException</span> </span>&#123;</span><br><span class="line">    LettuceClientConfiguration clientConfig = getLettuceClientConfiguration(clientResources,</span><br><span class="line">            <span class="keyword">this</span>.properties.getLettuce().getPool());</span><br><span class="line">    <span class="keyword">return</span> createLettuceConnectionFactory(clientConfig);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3>Lettuce的连接池使用了GenericObjectPool存放，</li>
+</ol>
+<p>LettuceConnectionFactory里开启了<code>factory.setValidateConnection(true)</code>，使用前会ping一下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">validateConnection</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.connectionMonitor) &#123;</span><br><span class="line">        <span class="keyword">boolean</span> valid = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">if</span> (connection != <span class="keyword">null</span> &amp;&amp; connection.isOpen()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (connection <span class="keyword">instanceof</span> StatefulRedisConnection) &#123;</span><br><span class="line">                    ((StatefulRedisConnection) connection).sync().ping();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (connection <span class="keyword">instanceof</span> StatefulRedisClusterConnection) &#123;</span><br><span class="line">                    ((StatefulRedisClusterConnection) connection).sync().ping();</span><br><span class="line">                &#125;</span><br><span class="line">                valid = <span class="keyword">true</span>;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                log.debug(<span class="string">"Validation failed"</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!valid) &#123;</span><br><span class="line">            log.warn(<span class="string">"Validation of shared connection failed. Creating a new connection."</span>);</span><br><span class="line">            resetConnection();</span><br><span class="line">            <span class="keyword">this</span>.connection = getNativeConnection();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LettuceConnectionFactory，创建connectionProvider封装连接的获取<br>这里注意调用afterPropertiesSet方法完成后续成员的初始化，所以要给自定义的LettuceConnectionFactory，创建connectionProvider封装连接的获取加@Bean注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.client = createClient();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.connectionProvider = createConnectionProvider(client, CODEC);</span><br><span class="line">    <span class="keyword">this</span>.reactiveConnectionProvider = createConnectionProvider(client, LettuceReactiveRedisConnection.CODEC);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isClusterAware()) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.clusterCommandExecutor = <span class="keyword">new</span> ClusterCommandExecutor(</span><br><span class="line">                <span class="keyword">new</span> LettuceClusterTopologyProvider((RedisClusterClient) client),</span><br><span class="line">                <span class="keyword">new</span> LettuceClusterConnection.LettuceClusterNodeResourceProvider(<span class="keyword">this</span>.connectionProvider),</span><br><span class="line">                EXCEPTION_TRANSLATION);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (getEagerInitialization() &amp;&amp; getShareNativeConnection()) &#123;</span><br><span class="line">        initConnection();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LettucePoolingConnectionProvider，从GenericObjectPool连接池取连接，如果开启了testOnBorrow，取得时候会检查连通性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T extends StatefulConnection&lt;?, ?&gt;&gt; <span class="function">T <span class="title">getConnection</span><span class="params">(Class&lt;T&gt; connectionType)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    GenericObjectPool&lt;StatefulConnection&lt;?, ?&gt;&gt; pool = pools.computeIfAbsent(connectionType, poolType -&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> ConnectionPoolSupport.createGenericObjectPool(() -&gt; connectionProvider.getConnection(connectionType),</span><br><span class="line">                poolConfig, <span class="keyword">false</span>);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">        StatefulConnection&lt;?, ?&gt; connection = pool.borrowObject();</span><br><span class="line"></span><br><span class="line">        poolRef.put(connection, pool);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> connectionType.cast(connection);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> PoolException(<span class="string">"Could not get a resource from the pool"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConnectionPoolSupport里有校验的方法，判断了一下标志位</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisPooledObjectFactory</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">StatefulConnection</span>&lt;?, ?&gt;&gt; <span class="keyword">extends</span> <span class="title">BasePooledObjectFactory</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Supplier&lt;T&gt; connectionSupplier;</span><br><span class="line"></span><br><span class="line">    RedisPooledObjectFactory(Supplier&lt;T&gt; connectionSupplier) &#123;</span><br><span class="line">        <span class="keyword">this</span>.connectionSupplier = connectionSupplier;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">create</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> connectionSupplier.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroyObject</span><span class="params">(PooledObject&lt;T&gt; p)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        p.getObject().close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> PooledObject&lt;T&gt; <span class="title">wrap</span><span class="params">(T obj)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DefaultPooledObject&lt;&gt;(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">validateObject</span><span class="params">(PooledObject&lt;T&gt; p)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> p.getObject().isOpen();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/" class="post-title-link" itemprop="url">Spring Boot使用Zookeeper分发configuration</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-01-08 11:34:00" itemprop="dateCreated datePublished" datetime="2019-01-08T11:34:00+08:00">2019-01-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Boot使用Zookeeper分发configuration" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="intro"><a href="#intro" class="headerlink" title="intro"></a>intro</h1><p>Configuration 在特殊的“bootstrap”阶段加载到 Spring 环境中。Bootstrap属于引导配置，Application属于应用配置。</p>
+<blockquote>
+<ol>
+<li>bootstrap 由父ApplicationContext加载，比application优先加载；</li>
+<li>bootstrap里面的属性不能被覆盖；</li>
+</ol>
+</blockquote>
+<p>Configuration 默认存储在/config命名空间中。基于 application 的 name 和 active profiles 创建多个PropertySource实例，以模仿解析 properties 的 Spring Cloud Config order。对于 example，具有 name testApp和dev profile 的 application 具有为其创建的以下 property 源：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">config/testApp,dev</span><br><span class="line">config/testApp</span><br><span class="line">config/application,dev</span><br><span class="line">config/application</span><br></pre></td></tr></table></figure>
+
+<p>最具体的 property 源位于顶部，底部最不具体。 config/application名称空间中的 Properties 适用于使用 zookeeper 进行 configuration 的所有 applications。 config/testApp名称空间中的 Properties 仅适用于名为testApp的服务的实例。</p>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>1、引入依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-zookeeper-config<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>2、添加bootstrap.yml</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">zookeeper:</span></span><br><span class="line">      <span class="attr">config:</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">        <span class="attr">root:</span> <span class="string">configuration</span></span><br><span class="line">        <span class="attr">defaultContext:</span> <span class="string">apps</span></span><br><span class="line">        <span class="attr">profileSeparator:</span> <span class="string">'::'</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>enabled：将此 value 设置为false会禁用 Zookeeper 配置。</p>
+<p>root：设置 configuration 值的基本命名空间。</p>
+<p>defaultContext：设置所有 applications 使用的 name。</p>
+<p>profileSeparator：设置用于将 property 源中的 profile name 与 profiles 分隔开的分隔符的 value。</p>
+</blockquote>
+<p>3、配置刷新</p>
+<p>添加<code>@RefreshScope</code>注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RefreshScope</span></span><br><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@ConfigurationProperties</span>(prefix = <span class="string">"config"</span>)</span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Config</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Data</span></span><br><span class="line">    <span class="meta">@AllArgsConstructor</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">test</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">boolean</span> testConfig;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>匹配的zkpath为/config/${service name}/config/test/test-config</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -231,13 +495,17 @@
 
               <time title="创建时间：2018-12-07 23:09:00" itemprop="dateCreated datePublished" datetime="2018-12-07T23:09:00+08:00">2018-12-07</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 23:34:14" itemprop="dateModified" datetime="2019-12-07T23:34:14+08:00">2019-12-07</time>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
               </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Storage/" itemprop="url" rel="index">
+                    <span itemprop="name">Storage</span>
+                  </a>
+                </span>
+            </span>
 
           
             <span id="/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/" class="post-meta-item leancloud_visitors" data-flag-title="mysql连接错误排查" title="阅读次数">
@@ -391,13 +659,17 @@
 
               <time title="创建时间：2018-09-26 21:13:00" itemprop="dateCreated datePublished" datetime="2018-09-26T21:13:00+08:00">2018-09-26</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 21:45:38" itemprop="dateModified" datetime="2019-12-07T21:45:38+08:00">2019-12-07</time>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
               </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Distribute/" itemprop="url" rel="index">
+                    <span itemprop="name">Distribute</span>
+                  </a>
+                </span>
+            </span>
 
           
             <span id="/2018/09/26/onos%E5%8A%A8%E6%80%81%E6%89%A9%E5%AE%B9%E5%AE%9E%E6%88%98%E4%B8%8E%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="onos动态扩容实战与源码分析" title="阅读次数">
@@ -802,13 +1074,6 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
 
               <time title="创建时间：2018-09-07 21:05:00" itemprop="dateCreated datePublished" datetime="2018-09-07T21:05:00+08:00">2018-09-07</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 21:12:39" itemprop="dateModified" datetime="2019-12-07T21:12:39+08:00">2019-12-07</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -885,13 +1150,17 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
 
               <time title="创建时间：2018-08-29 22:48:00" itemprop="dateCreated datePublished" datetime="2018-08-29T22:48:00+08:00">2018-08-29</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 22:49:42" itemprop="dateModified" datetime="2019-12-07T22:49:42+08:00">2019-12-07</time>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
               </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index">
+                    <span itemprop="name">Go</span>
+                  </a>
+                </span>
+            </span>
 
           
             <span id="/2018/08/29/Go-range%E5%87%BD%E6%95%B0%E8%B8%A9%E5%9D%91/" class="post-meta-item leancloud_visitors" data-flag-title="Go range函数踩坑" title="阅读次数">
@@ -960,13 +1229,17 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
 
               <time title="创建时间：2018-08-24 22:51:00" itemprop="dateCreated datePublished" datetime="2018-08-24T22:51:00+08:00">2018-08-24</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 22:54:39" itemprop="dateModified" datetime="2019-12-07T22:54:39+08:00">2019-12-07</time>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
               </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
 
           
             <span id="/2018/08/24/getContextPath%E3%80%81getServletPath%E3%80%81getRequestURI%E7%9A%84%E5%8C%BA%E5%88%AB/" class="post-meta-item leancloud_visitors" data-flag-title="getContextPath、getServletPath、getRequestURI的区别" title="阅读次数">
@@ -1038,13 +1311,6 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
 
               <time title="创建时间：2018-06-07 23:03:00" itemprop="dateCreated datePublished" datetime="2018-06-07T23:03:00+08:00">2018-06-07</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 23:07:37" itemprop="dateModified" datetime="2019-12-07T23:07:37+08:00">2019-12-07</time>
-              </span>
 
           
             <span id="/2018/06/07/%E8%A7%A3%E5%86%B3docker%E4%B8%8E%E4%B8%BB%E6%9C%BA%E6%97%B6%E9%97%B4%E4%B8%8D%E4%B8%80%E8%87%B4/" class="post-meta-item leancloud_visitors" data-flag-title="解决docker与主机时间不一致" title="阅读次数">
@@ -1117,13 +1383,6 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
 
               <time title="创建时间：2018-04-21 20:46:00" itemprop="dateCreated datePublished" datetime="2018-04-21T20:46:00+08:00">2018-04-21</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 23:03:15" itemprop="dateModified" datetime="2019-12-07T23:03:15+08:00">2019-12-07</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -1229,14 +1488,14 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
@@ -1274,7 +1533,7 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
 <div class="copyright">
   
   &copy; 2018 – 
-  <span itemprop="copyrightYear">2019</span>
+  <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

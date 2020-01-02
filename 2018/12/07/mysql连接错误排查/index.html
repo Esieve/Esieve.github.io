@@ -59,7 +59,7 @@
 <meta property="og:description" content="最近一周，MiotDungBeetleManager和MiotSpecManager偶尔发生数据库连接错误的异常。 最终得出的结论是：由于我们的DAL层使用了数据库连接池&amp;amp;&amp;amp;我们的业务请求量比较低，导致连接池里的连接与数据库长时间没有通信，连接被数据库关掉了（mysql默认是8小时，连接不通信会被关掉）。但是被关掉的连接没有从连接池里踢掉，这些被关闭的连接与mysql通信时，发生了">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https:&#x2F;&#x2F;i.loli.net&#x2F;2019&#x2F;12&#x2F;07&#x2F;qmrt5PoeisJ7EOz.png">
-<meta property="og:updated_time" content="2019-12-07T15:34:14.057Z">
+<meta property="og:updated_time" content="2019-12-08T02:51:23.352Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https:&#x2F;&#x2F;i.loli.net&#x2F;2019&#x2F;12&#x2F;07&#x2F;qmrt5PoeisJ7EOz.png">
 
@@ -160,11 +160,6 @@
     <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
-
-  </li>
         <li class="menu-item menu-item-categories">
 
     <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
@@ -233,13 +228,17 @@
 
               <time title="创建时间：2018-12-07 23:09:00" itemprop="dateCreated datePublished" datetime="2018-12-07T23:09:00+08:00">2018-12-07</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-07 23:34:14" itemprop="dateModified" datetime="2019-12-07T23:34:14+08:00">2019-12-07</time>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
               </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Storage/" itemprop="url" rel="index">
+                    <span itemprop="name">Storage</span>
+                  </a>
+                </span>
+            </span>
 
           
             <span id="/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/" class="post-meta-item leancloud_visitors" data-flag-title="mysql连接错误排查" title="阅读次数">
@@ -369,6 +368,9 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+                <a href="/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/" rel="prev" title="Spring Boot使用Zookeeper分发configuration">
+                  Spring Boot使用Zookeeper分发configuration <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
       </footer>
@@ -422,14 +424,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
@@ -467,7 +469,7 @@
 <div class="copyright">
   
   &copy; 2018 – 
-  <span itemprop="copyrightYear">2019</span>
+  <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <link rel="mask-icon" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Esieve's blog" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Spring Boot提供了RedisTemplate对Jedis和Lettuce进行了封装，使得我们可以方便的对两种客户端进行使用和切换。 Jedis 是直连模式，在多个线程间共享一个 Jedis 实例时是线程不安全的，如果想要在多线程环境下使用 Jedis，需要使用连接池，每个线程都去拿自己的 Jedis 实例，当连接数量增多时，物理连接成本就较高了。 Lettuce的连接是基于Netty的，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lettuce实践与部分源码分析">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;18&#x2F;Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90&#x2F;index.html">
+<meta property="og:site_name" content="Esieve&#39;s blog">
+<meta property="og:description" content="Spring Boot提供了RedisTemplate对Jedis和Lettuce进行了封装，使得我们可以方便的对两种客户端进行使用和切换。 Jedis 是直连模式，在多个线程间共享一个 Jedis 实例时是线程不安全的，如果想要在多线程环境下使用 Jedis，需要使用连接池，每个线程都去拿自己的 Jedis 实例，当连接数量增多时，物理连接成本就较高了。 Lettuce的连接是基于Netty的，">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-18T12:23:24.560Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Lettuce实践与部分源码分析 | Esieve's blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151881949-1"></script>
+    <script>
+      var host = window.location.hostname;
+      if (host !== "localhost" || !true) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-151881949-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Esieve's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Lettuce实践与部分源码分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-18 20:23:24" itemprop="dateCreated datePublished" datetime="2019-12-18T20:23:24+08:00">2019-12-18</time>
+            </span>
+
+          
+            <span id="/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-meta-item leancloud_visitors" data-flag-title="Lettuce实践与部分源码分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Spring Boot提供了RedisTemplate对Jedis和Lettuce进行了封装，使得我们可以方便的对两种客户端进行使用和切换。</p>
+<p>Jedis 是直连模式，在多个线程间共享一个 Jedis 实例时是线程不安全的，如果想要在多线程环境下使用 Jedis，需要使用连接池，每个线程都去拿自己的 Jedis 实例，当连接数量增多时，物理连接成本就较高了。</p>
+<p>Lettuce的连接是基于Netty的，连接实例可以在多个线程间共享，所以，一个多线程的应用可以使用同一个连接实例，而不用担心并发线程的数量。当然这个也是可伸缩的设计，一个连接实例不够的情况也可以按需增加连接实例。</p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><ol>
+<li>Spring Boot通过在application.properties里添加配置，开启Lettuce客户端，<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">spring.redis.password=</span><br><span class="line">spring.redis.timeout=</span><br><span class="line">spring.redis.lettuce.pool.max-active=</span><br><span class="line">spring.redis.lettuce.pool.max-wait=</span><br><span class="line">spring.redis.lettuce.pool.max-idle=</span><br><span class="line">spring.redis.lettuce.pool.min-idle=</span><br><span class="line">spring.redis.lettuce.shutdown-timeout=</span><br><span class="line">spring.redis.cluster.nodes=</span><br><span class="line">spring.redis.cluster.max-redirects=</span><br></pre></td></tr></table></figure></li>
+<li>Spring Boot会在扫描配置的时候，提供默认的RedisConnectionFactory实现，这里我们可以重写定制更多策略，最后注入到RedisTemplate中<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ConditionalOnClass</span>(RedisClient<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">// <span class="title">application</span>.<span class="title">properties</span>中添加配置的才创建<span class="title">bean</span></span></span><br><span class="line"><span class="class">@<span class="title">ConditionalOnProperty</span>(<span class="title">prefix</span> </span>= <span class="string">"spring.redis"</span>, name = <span class="string">"cluster.nodes"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Duration DEFAULT_TIMEOUT = Duration.ofSeconds(<span class="number">10</span>);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Duration DEFAULT_REFRESH_PERIOD = Duration.ofSeconds(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span>(RedisTemplate<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">public</span> <span class="title">RedisTemplate</span>&lt;<span class="title">String</span>, <span class="title">Object</span>&gt; <span class="title">redisTemplate</span>(<span class="title">LettuceConnectionFactory</span> <span class="title">redisConnectionFactory</span>) </span>&#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; template = <span class="keyword">new</span> RedisTemplate&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        GenericGsonRedisSerializer redisSerializer = <span class="keyword">new</span> GenericGsonRedisSerializer();</span><br><span class="line">        template.setConnectionFactory(redisConnectionFactory);</span><br><span class="line">        template.setValueSerializer(redisSerializer);</span><br><span class="line">        template.setKeySerializer(<span class="keyword">new</span> StringRedisSerializer());</span><br><span class="line">        template.setHashValueSerializer(redisSerializer);</span><br><span class="line">        template.setHashKeySerializer(<span class="keyword">new</span> StringRedisSerializer());</span><br><span class="line">        template.afterPropertiesSet();</span><br><span class="line">        <span class="keyword">return</span> template;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span>(RedisConnectionFactory<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">public</span> <span class="title">LettuceConnectionFactory</span> <span class="title">redisConnectionFactory</span>(<span class="title">RedisProperties</span> <span class="title">properties</span>) </span>&#123;</span><br><span class="line">        LettuceConnectionFactory factory = <span class="keyword">new</span> LettuceConnectionFactory(getClusterConfiguration(properties), getClientConfiguration(properties));</span><br><span class="line">        <span class="comment">// 使用前先校验连接</span></span><br><span class="line">        factory.setValidateConnection(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">return</span> factory;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> RedisClusterConfiguration <span class="title">getClusterConfiguration</span><span class="params">(RedisProperties properties)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (properties.getCluster() == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        RedisProperties.Cluster clusterProperties = properties.getCluster();</span><br><span class="line">        RedisClusterConfiguration config = <span class="keyword">new</span> RedisClusterConfiguration(clusterProperties.getNodes());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (clusterProperties.getMaxRedirects() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            config.setMaxRedirects(clusterProperties.getMaxRedirects());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (properties.getPassword() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            config.setPassword(RedisPassword.of(properties.getPassword()));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> config;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> LettuceClientConfiguration <span class="title">getClientConfiguration</span><span class="params">(RedisProperties properties)</span> </span>&#123;</span><br><span class="line">        GenericObjectPoolConfig config = <span class="keyword">new</span> GenericObjectPoolConfig();</span><br><span class="line"></span><br><span class="line">        RedisProperties.Pool pool = properties.getLettuce().getPool();</span><br><span class="line"></span><br><span class="line">        config.setMaxTotal(pool.getMaxIdle());</span><br><span class="line">        config.setMaxIdle(pool.getMaxIdle());</span><br><span class="line">        config.setMinIdle(pool.getMinIdle());</span><br><span class="line">        config.setMaxWaitMillis(pool.getMaxWait().toMillis());</span><br><span class="line">        <span class="comment">// 取连接时校验</span></span><br><span class="line">        config.setTestOnBorrow(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">// 空闲时校验</span></span><br><span class="line">        config.setTestWhileIdle(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对于redis cluster，如果某个节点失效，我们需要配置定期刷新和适应性刷新，及时更新拓扑</span></span><br><span class="line">        ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()</span><br><span class="line">                .topologyRefreshOptions(ClusterTopologyRefreshOptions.builder()</span><br><span class="line">                        .enablePeriodicRefresh()</span><br><span class="line">                        .refreshPeriod(DEFAULT_REFRESH_PERIOD)</span><br><span class="line">                        .enableAllAdaptiveRefreshTriggers()</span><br><span class="line">                        .build())</span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> LettucePoolingClientConfiguration.builder()</span><br><span class="line">                .commandTimeout(properties.getTimeout() == <span class="keyword">null</span> ? DEFAULT_TIMEOUT : properties.getTimeout())</span><br><span class="line">                .poolConfig(config)</span><br><span class="line">                <span class="comment">// Lettuce提供了多种读取策略，我们可以从slave读，fallback到master，适合实时性要求不高，保证最终一致性</span></span><br><span class="line">                .readFrom(ReadFrom.REPLICA_PREFERRED)</span><br><span class="line">                .clientOptions(clusterClientOptions)</span><br><span class="line">                .build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><h3 id="默认RedisConnectionFactory"><a href="#默认RedisConnectionFactory" class="headerlink" title="默认RedisConnectionFactory"></a>默认RedisConnectionFactory</h3>spring-boot-autoconfigure会创建一个默认的RedisConnectionFactory，在LettuceConnectionConfiguration类里<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span>(RedisConnectionFactory<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> <span class="title">LettuceConnectionFactory</span> <span class="title">redisConnectionFactory</span>(<span class="title">ClientResources</span> <span class="title">clientResources</span>)</span></span><br><span class="line"><span class="class">        <span class="title">throws</span> <span class="title">UnknownHostException</span> </span>&#123;</span><br><span class="line">    LettuceClientConfiguration clientConfig = getLettuceClientConfiguration(clientResources,</span><br><span class="line">            <span class="keyword">this</span>.properties.getLettuce().getPool());</span><br><span class="line">    <span class="keyword">return</span> createLettuceConnectionFactory(clientConfig);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3>Lettuce的连接池使用了GenericObjectPool存放，</li>
+</ol>
+<p>LettuceConnectionFactory里开启了<code>factory.setValidateConnection(true)</code>，使用前会ping一下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">validateConnection</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.connectionMonitor) &#123;</span><br><span class="line">        <span class="keyword">boolean</span> valid = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">if</span> (connection != <span class="keyword">null</span> &amp;&amp; connection.isOpen()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (connection <span class="keyword">instanceof</span> StatefulRedisConnection) &#123;</span><br><span class="line">                    ((StatefulRedisConnection) connection).sync().ping();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (connection <span class="keyword">instanceof</span> StatefulRedisClusterConnection) &#123;</span><br><span class="line">                    ((StatefulRedisClusterConnection) connection).sync().ping();</span><br><span class="line">                &#125;</span><br><span class="line">                valid = <span class="keyword">true</span>;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                log.debug(<span class="string">"Validation failed"</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!valid) &#123;</span><br><span class="line">            log.warn(<span class="string">"Validation of shared connection failed. Creating a new connection."</span>);</span><br><span class="line">            resetConnection();</span><br><span class="line">            <span class="keyword">this</span>.connection = getNativeConnection();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LettuceConnectionFactory，创建connectionProvider封装连接的获取<br>这里注意调用afterPropertiesSet方法完成后续成员的初始化，所以要给自定义的LettuceConnectionFactory，创建connectionProvider封装连接的获取加@Bean注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.client = createClient();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.connectionProvider = createConnectionProvider(client, CODEC);</span><br><span class="line">    <span class="keyword">this</span>.reactiveConnectionProvider = createConnectionProvider(client, LettuceReactiveRedisConnection.CODEC);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isClusterAware()) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.clusterCommandExecutor = <span class="keyword">new</span> ClusterCommandExecutor(</span><br><span class="line">                <span class="keyword">new</span> LettuceClusterTopologyProvider((RedisClusterClient) client),</span><br><span class="line">                <span class="keyword">new</span> LettuceClusterConnection.LettuceClusterNodeResourceProvider(<span class="keyword">this</span>.connectionProvider),</span><br><span class="line">                EXCEPTION_TRANSLATION);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (getEagerInitialization() &amp;&amp; getShareNativeConnection()) &#123;</span><br><span class="line">        initConnection();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LettucePoolingConnectionProvider，从GenericObjectPool连接池取连接，如果开启了testOnBorrow，取得时候会检查连通性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T extends StatefulConnection&lt;?, ?&gt;&gt; <span class="function">T <span class="title">getConnection</span><span class="params">(Class&lt;T&gt; connectionType)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    GenericObjectPool&lt;StatefulConnection&lt;?, ?&gt;&gt; pool = pools.computeIfAbsent(connectionType, poolType -&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> ConnectionPoolSupport.createGenericObjectPool(() -&gt; connectionProvider.getConnection(connectionType),</span><br><span class="line">                poolConfig, <span class="keyword">false</span>);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">        StatefulConnection&lt;?, ?&gt; connection = pool.borrowObject();</span><br><span class="line"></span><br><span class="line">        poolRef.put(connection, pool);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> connectionType.cast(connection);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> PoolException(<span class="string">"Could not get a resource from the pool"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConnectionPoolSupport里有校验的方法，判断了一下标志位</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisPooledObjectFactory</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">StatefulConnection</span>&lt;?, ?&gt;&gt; <span class="keyword">extends</span> <span class="title">BasePooledObjectFactory</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Supplier&lt;T&gt; connectionSupplier;</span><br><span class="line"></span><br><span class="line">    RedisPooledObjectFactory(Supplier&lt;T&gt; connectionSupplier) &#123;</span><br><span class="line">        <span class="keyword">this</span>.connectionSupplier = connectionSupplier;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">create</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> connectionSupplier.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroyObject</span><span class="params">(PooledObject&lt;T&gt; p)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        p.getObject().close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> PooledObject&lt;T&gt; <span class="title">wrap</span><span class="params">(T obj)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DefaultPooledObject&lt;&gt;(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">validateObject</span><span class="params">(PooledObject&lt;T&gt; p)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> p.getObject().isOpen();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/" rel="next" title="Spring Boot使用Zookeeper分发configuration">
+                  <i class="fa fa-chevron-left"></i> Spring Boot使用Zookeeper分发configuration
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/" rel="prev" title="Spring Boot日志系统改造与源码">
+                  Spring Boot日志系统改造与源码 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#实践"><span class="nav-number">1.</span> <span class="nav-text">实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码"><span class="nav-number">2.</span> <span class="nav-text">源码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#默认RedisConnectionFactory"><span class="nav-number">2.1.</span> <span class="nav-text">默认RedisConnectionFactory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连接池"><span class="nav-number">2.2.</span> <span class="nav-text">连接池</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Esieve"
+      src="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <p class="site-author-name" itemprop="name">Esieve</p>
+  <div class="site-description" itemprop="description">🐛🐛🐛</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Esieve" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Esieve" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/mailto:zhangqinyao123@gmail.com" title="E-Mail &amp;rarr; mailto:zhangqinyao123@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Esieve</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.5.0
+  </div>
+
+        
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = visitors.getAttribute('id').trim();
+      var title = visitors.getAttribute('data-flag-title').trim();
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.log('Failed to save visitor count', error);
+              })
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return element.getAttribute('id').trim();
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.url;
+            var time = item.time;
+            leancloudSelector(url).innerText = time;
+          }
+          for (var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=pcWh7e0Wuc6HQWieJjWboTgJ-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'pcWh7e0Wuc6HQWieJjWboTgJ-gzGzoHsz',
+            'X-LC-Key': 'NOWgybKc3shtO70S4C3PpHig',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        const localhost = /http:\/\/(localhost|127.0.0.1|0.0.0.0)/;
+        if (localhost.test(document.URL)) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

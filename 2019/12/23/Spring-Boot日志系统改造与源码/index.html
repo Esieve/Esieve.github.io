@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <link rel="mask-icon" href="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Esieve's blog" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="源码首页我们需要看下Spring Boot是如何加载不同的日志系统。加载的启动类是LoggingApplicationListener，这里重写了程序启动的一些事件。 1234567891011121314151617181920@Overridepublic void onApplicationEvent(ApplicationEvent event) &amp;#123;    if (event i">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Boot日志系统改造与源码">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;23&#x2F;Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81&#x2F;index.html">
+<meta property="og:site_name" content="Esieve&#39;s blog">
+<meta property="og:description" content="源码首页我们需要看下Spring Boot是如何加载不同的日志系统。加载的启动类是LoggingApplicationListener，这里重写了程序启动的一些事件。 1234567891011121314151617181920@Overridepublic void onApplicationEvent(ApplicationEvent event) &amp;#123;    if (event i">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https:&#x2F;&#x2F;i.loli.net&#x2F;2019&#x2F;12&#x2F;23&#x2F;RQEwS3lZC7zgVDu.png">
+<meta property="og:updated_time" content="2019-12-23T07:48:25.266Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https:&#x2F;&#x2F;i.loli.net&#x2F;2019&#x2F;12&#x2F;23&#x2F;RQEwS3lZC7zgVDu.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Spring Boot日志系统改造与源码 | Esieve's blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151881949-1"></script>
+    <script>
+      var host = window.location.hostname;
+      if (host !== "localhost" || !true) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-151881949-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Esieve's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-fw fa-calendar"></i>日程表</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Boot日志系统改造与源码
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-23 11:34:00" itemprop="dateCreated datePublished" datetime="2019-12-23T11:34:00+08:00">2019-12-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2019/12/23/Spring-Boot%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E6%94%B9%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Boot日志系统改造与源码" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>首页我们需要看下Spring Boot是如何加载不同的日志系统。加载的启动类是<code>LoggingApplicationListener</code>，这里重写了程序启动的一些事件。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(ApplicationEvent event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationStartingEvent) &#123;</span><br><span class="line">        onApplicationStartingEvent((ApplicationStartingEvent) event);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationEnvironmentPreparedEvent) &#123;</span><br><span class="line">        onApplicationEnvironmentPreparedEvent(</span><br><span class="line">                (ApplicationEnvironmentPreparedEvent) event);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationPreparedEvent) &#123;</span><br><span class="line">        onApplicationPreparedEvent((ApplicationPreparedEvent) event);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ContextClosedEvent &amp;&amp; ((ContextClosedEvent) event)</span><br><span class="line">            .getApplicationContext().getParent() == <span class="keyword">null</span>) &#123;</span><br><span class="line">        onContextClosedEvent();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationFailedEvent) &#123;</span><br><span class="line">        onApplicationFailedEvent();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>已<code>onApplicationStartingEvent</code>函数为例，方法从<code>LoggingSystem</code>获取日志系统。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationStartingEvent</span><span class="params">(ApplicationStartingEvent event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.loggingSystem = LoggingSystem</span><br><span class="line">            .get(event.getSpringApplication().getClassLoader());</span><br><span class="line">    <span class="keyword">this</span>.loggingSystem.beforeInitialize();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>LoggingSystem</code>定义了一些常用的日志系统，这个是固定的无法修改，我们在使用的时候根据引用的依赖控制。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    Map&lt;String, String&gt; systems = <span class="keyword">new</span> LinkedHashMap&lt;&gt;();</span><br><span class="line">    systems.put(<span class="string">"ch.qos.logback.core.Appender"</span>,</span><br><span class="line">            <span class="string">"org.springframework.boot.logging.logback.LogbackLoggingSystem"</span>);</span><br><span class="line">    systems.put(<span class="string">"org.apache.logging.log4j.core.impl.Log4jContextFactory"</span>,</span><br><span class="line">            <span class="string">"org.springframework.boot.logging.log4j2.Log4J2LoggingSystem"</span>);</span><br><span class="line">    systems.put(<span class="string">"java.util.logging.LogManager"</span>,</span><br><span class="line">            <span class="string">"org.springframework.boot.logging.java.JavaLoggingSystem"</span>);</span><br><span class="line">    SYSTEMS = Collections.unmodifiableMap(systems);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里<code>get</code>方法定义了获取逻辑，可以看到，我们可以通过System Property的方式，自定义我们自己的日志系统，例如<code>System.setProperty(LoggingSystem.class.getName(), &quot;com.test.TestLoggingSystem&quot;);</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String SYSTEM_PROPERTY = LoggingSystem<span class="class">.<span class="keyword">class</span>.<span class="title">getName</span>()</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LoggingSystem <span class="title">get</span><span class="params">(ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">    String loggingSystem = System.getProperty(SYSTEM_PROPERTY);</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.hasLength(loggingSystem)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (NONE.equals(loggingSystem)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> NoOpLoggingSystem();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> get(classLoader, loggingSystem);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> SYSTEMS.entrySet().stream()</span><br><span class="line">            .filter((entry) -&gt; ClassUtils.isPresent(entry.getKey(), classLoader))</span><br><span class="line">            .map((entry) -&gt; get(classLoader, entry.getValue())).findFirst()</span><br><span class="line">            .orElseThrow(() -&gt; <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                    <span class="string">"No suitable logging system located"</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>文件系统的继承关系如下</p>
+<p><img src="https://i.loli.net/2019/12/23/RQEwS3lZC7zgVDu.png" alt="image.png"></p>
+<p>我们以<code>log4j</code>为例，可以看到默认实现是用<code>ResourceUtils</code>读取，这里我们就可以继承Log4J2LoggingSystem，去重写<code>loadConfiguration</code>方法，比如从zookeeper获取。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadDefaults</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></span><br><span class="line"><span class="function"><span class="params">        LogFile logFile)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (logFile != <span class="keyword">null</span>) &#123;</span><br><span class="line">        loadConfiguration(getPackagedConfigFile(<span class="string">"log4j2-file.xml"</span>), logFile);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        loadConfiguration(getPackagedConfigFile(<span class="string">"log4j2.xml"</span>), logFile);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadConfiguration</span><span class="params">(LoggingInitializationContext initializationContext,</span></span></span><br><span class="line"><span class="function"><span class="params">        String location, LogFile logFile)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.loadConfiguration(initializationContext, location, logFile);</span><br><span class="line">    loadConfiguration(location, logFile);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">loadConfiguration</span><span class="params">(String location, LogFile logFile)</span> </span>&#123;</span><br><span class="line">    Assert.notNull(location, <span class="string">"Location must not be null"</span>);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        LoggerContext ctx = getLoggerContext();</span><br><span class="line">        URL url = ResourceUtils.getURL(location);</span><br><span class="line">        ConfigurationSource source = getConfigurationSource(url);</span><br><span class="line">        ctx.start(ConfigurationFactory.getInstance().getConfiguration(ctx, source));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                <span class="string">"Could not initialize Log4J2 logging from "</span> + location, ex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> ConfigurationSource <span class="title">getConfigurationSource</span><span class="params">(URL url)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    InputStream stream = url.openStream();</span><br><span class="line">    <span class="keyword">if</span> (FILE_PROTOCOL.equals(url.getProtocol())) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ConfigurationSource(stream, ResourceUtils.getFile(url));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ConfigurationSource(stream, url);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="Lettuce实践与部分源码分析">
+                  <i class="fa fa-chevron-left"></i> Lettuce实践与部分源码分析
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#源码"><span class="nav-number">1.</span> <span class="nav-text">源码</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Esieve"
+      src="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+  <p class="site-author-name" itemprop="name">Esieve</p>
+  <div class="site-description" itemprop="description">🐛🐛🐛</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Esieve" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Esieve" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/mailto:zhangqinyao123@gmail.com" title="E-Mail &amp;rarr; mailto:zhangqinyao123@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Esieve</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.5.0
+  </div>
+
+        
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = visitors.getAttribute('id').trim();
+      var title = visitors.getAttribute('data-flag-title').trim();
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.log('Failed to save visitor count', error);
+              })
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return element.getAttribute('id').trim();
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.url;
+            var time = item.time;
+            leancloudSelector(url).innerText = time;
+          }
+          for (var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=pcWh7e0Wuc6HQWieJjWboTgJ-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'pcWh7e0Wuc6HQWieJjWboTgJ-gzGzoHsz',
+            'X-LC-Key': 'NOWgybKc3shtO70S4C3PpHig',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        const localhost = /http:\/\/(localhost|127.0.0.1|0.0.0.0)/;
+        if (localhost.test(document.URL)) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

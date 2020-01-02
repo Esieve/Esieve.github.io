@@ -51,16 +51,17 @@
   };
 </script>
 
-  <meta name="description" content="🐛🐛🐛">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Esieve&#39;s blog">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;2018&#x2F;index.html">
+  <meta name="description" content="introConfiguration 在特殊的“bootstrap”阶段加载到 Spring 环境中。Bootstrap属于引导配置，Application属于应用配置。   bootstrap 由父ApplicationContext加载，比application优先加载； bootstrap里面的属性不能被覆盖；   Configuration 默认存储在&#x2F;config命名空间中。基于 app">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Boot使用Zookeeper分发configuration">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;01&#x2F;08&#x2F;Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9&#x2F;index.html">
 <meta property="og:site_name" content="Esieve&#39;s blog">
-<meta property="og:description" content="🐛🐛🐛">
+<meta property="og:description" content="introConfiguration 在特殊的“bootstrap”阶段加载到 Spring 环境中。Bootstrap属于引导配置，Application属于应用配置。   bootstrap 由父ApplicationContext加载，比application优先加载； bootstrap里面的属性不能被覆盖；   Configuration 默认存储在&#x2F;config命名空间中。基于 app">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-08T04:41:58.821Z">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://yoursite.com/archives/2018/">
+<link rel="canonical" href="http://yoursite.com/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/">
 
 
 <script id="page-configurations">
@@ -68,13 +69,13 @@
   CONFIG.page = {
     sidebar: "",
     isHome: false,
-    isPost: false,
+    isPost: true,
     isPage: false,
-    isArchive: true
+    isArchive: false
   };
 </script>
 
-  <title>归档 | Esieve's blog</title>
+  <title>Spring Boot使用Zookeeper分发configuration | Esieve's blog</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151881949-1"></script>
     <script>
@@ -195,169 +196,125 @@
           <div class="content">
             
 
+  <div class="posts-expand">
+      
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">嗯..! 目前共计 10 篇日志。 继续努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Boot使用Zookeeper分发configuration
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-01-08 11:34:00" itemprop="dateCreated datePublished" datetime="2019-01-08T11:34:00+08:00">2019-01-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/" class="post-meta-item leancloud_visitors" data-flag-title="Spring Boot使用Zookeeper分发configuration" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <h1 class="collection-header">2018</h1>
-    </div>
+        <h1 id="intro"><a href="#intro" class="headerlink" title="intro"></a>intro</h1><p>Configuration 在特殊的“bootstrap”阶段加载到 Spring 环境中。Bootstrap属于引导配置，Application属于应用配置。</p>
+<blockquote>
+<ol>
+<li>bootstrap 由父ApplicationContext加载，比application优先加载；</li>
+<li>bootstrap里面的属性不能被覆盖；</li>
+</ol>
+</blockquote>
+<p>Configuration 默认存储在/config命名空间中。基于 application 的 name 和 active profiles 创建多个PropertySource实例，以模仿解析 properties 的 Spring Cloud Config order。对于 example，具有 name testApp和dev profile 的 application 具有为其创建的以下 property 源：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">config/testApp,dev</span><br><span class="line">config/testApp</span><br><span class="line">config/application,dev</span><br><span class="line">config/application</span><br></pre></td></tr></table></figure>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-12-07T23:09:00+08:00"
-              content="2018-12-07">
-          12-07
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/" itemprop="url">
-            <span itemprop="name">mysql连接错误排查</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-09-26T21:13:00+08:00"
-              content="2018-09-26">
-          09-26
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/09/26/onos%E5%8A%A8%E6%80%81%E6%89%A9%E5%AE%B9%E5%AE%9E%E6%88%98%E4%B8%8E%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" itemprop="url">
-            <span itemprop="name">onos动态扩容实战与源码分析</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-09-07T21:05:00+08:00"
-              content="2018-09-07">
-          09-07
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/09/07/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/" itemprop="url">
-            <span itemprop="name">Raft协议为何只能有奇数个节点</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-08-29T22:48:00+08:00"
-              content="2018-08-29">
-          08-29
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/08/29/Go-range%E5%87%BD%E6%95%B0%E8%B8%A9%E5%9D%91/" itemprop="url">
-            <span itemprop="name">Go range函数踩坑</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-08-24T22:51:00+08:00"
-              content="2018-08-24">
-          08-24
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/08/24/getContextPath%E3%80%81getServletPath%E3%80%81getRequestURI%E7%9A%84%E5%8C%BA%E5%88%AB/" itemprop="url">
-            <span itemprop="name">getContextPath、getServletPath、getRequestURI的区别</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-06-07T23:03:00+08:00"
-              content="2018-06-07">
-          06-07
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/06/07/%E8%A7%A3%E5%86%B3docker%E4%B8%8E%E4%B8%BB%E6%9C%BA%E6%97%B6%E9%97%B4%E4%B8%8D%E4%B8%80%E8%87%B4/" itemprop="url">
-            <span itemprop="name">解决docker与主机时间不一致</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2018-04-21T20:46:00+08:00"
-              content="2018-04-21">
-          04-21
-        </time>
-      </div>
-
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2018/04/21/hello-world/" itemprop="url">
-            <span itemprop="name">Hello World</span>
-          </a>
-      </h2>
-
-    </header>
-  </article>
-
+<p>最具体的 property 源位于顶部，底部最不具体。 config/application名称空间中的 Properties 适用于使用 zookeeper 进行 configuration 的所有 applications。 config/testApp名称空间中的 Properties 仅适用于名为testApp的服务的实例。</p>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>1、引入依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-zookeeper-config<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>2、添加bootstrap.yml</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">zookeeper:</span></span><br><span class="line">      <span class="attr">config:</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">        <span class="attr">root:</span> <span class="string">configuration</span></span><br><span class="line">        <span class="attr">defaultContext:</span> <span class="string">apps</span></span><br><span class="line">        <span class="attr">profileSeparator:</span> <span class="string">'::'</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>enabled：将此 value 设置为false会禁用 Zookeeper 配置。</p>
+<p>root：设置 configuration 值的基本命名空间。</p>
+<p>defaultContext：设置所有 applications 使用的 name。</p>
+<p>profileSeparator：设置用于将 property 源中的 profile name 与 profiles 分隔开的分隔符的 value。</p>
+</blockquote>
+<p>3、配置刷新</p>
+<p>添加<code>@RefreshScope</code>注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RefreshScope</span></span><br><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@ConfigurationProperties</span>(prefix = <span class="string">"config"</span>)</span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Config</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Data</span></span><br><span class="line">    <span class="meta">@AllArgsConstructor</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">test</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">boolean</span> testConfig;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>匹配的zkpath为/config/${service name}/config/test/test-config</p>
 
     </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/" rel="next" title="mysql连接错误排查">
+                  <i class="fa fa-chevron-left"></i> mysql连接错误排查
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/12/18/Lettuce%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="prev" title="Lettuce实践与部分源码分析">
+                  Lettuce实践与部分源码分析 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
   </div>
-  
-  
-  
-
-  
-
 
 
           </div>
@@ -386,6 +343,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#intro"><span class="nav-number">1.</span> <span class="nav-text">intro</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#配置"><span class="nav-number">2.</span> <span class="nav-text">配置</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
