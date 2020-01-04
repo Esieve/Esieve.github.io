@@ -51,33 +51,30 @@
   };
 </script>
 
-  <meta name="description" content="最近一周，MiotDungBeetleManager和MiotSpecManager偶尔发生数据库连接错误的异常。 最终得出的结论是：由于我们的DAL层使用了数据库连接池&amp;amp;&amp;amp;我们的业务请求量比较低，导致连接池里的连接与数据库长时间没有通信，连接被数据库关掉了（mysql默认是8小时，连接不通信会被关掉）。但是被关掉的连接没有从连接池里踢掉，这些被关闭的连接与mysql通信时，发生了">
-<meta property="og:type" content="article">
-<meta property="og:title" content="mysql连接错误排查">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2018&#x2F;12&#x2F;07&#x2F;mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5&#x2F;index.html">
+  <meta name="description" content="🐛🐛🐛">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Esieve&#39;s blog">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;page&#x2F;2&#x2F;index.html">
 <meta property="og:site_name" content="Esieve&#39;s blog">
-<meta property="og:description" content="最近一周，MiotDungBeetleManager和MiotSpecManager偶尔发生数据库连接错误的异常。 最终得出的结论是：由于我们的DAL层使用了数据库连接池&amp;amp;&amp;amp;我们的业务请求量比较低，导致连接池里的连接与数据库长时间没有通信，连接被数据库关掉了（mysql默认是8小时，连接不通信会被关掉）。但是被关掉的连接没有从连接池里踢掉，这些被关闭的连接与mysql通信时，发生了">
+<meta property="og:description" content="🐛🐛🐛">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https:&#x2F;&#x2F;i.loli.net&#x2F;2019&#x2F;12&#x2F;07&#x2F;qmrt5PoeisJ7EOz.png">
-<meta property="og:updated_time" content="2019-12-08T02:51:23.352Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https:&#x2F;&#x2F;i.loli.net&#x2F;2019&#x2F;12&#x2F;07&#x2F;qmrt5PoeisJ7EOz.png">
 
-<link rel="canonical" href="http://yoursite.com/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/">
+<link rel="canonical" href="http://yoursite.com/page/2/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome: false,
-    isPost: true,
+    isHome: true,
+    isPost: false,
     isPage: false,
     isArchive: false
   };
 </script>
 
-  <title>mysql连接错误排查 | Esieve's blog</title>
+  <title>Esieve's blog</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151881949-1"></script>
     <script>
@@ -199,11 +196,11 @@
             
 
   <div class="posts-expand">
-      
+        
   
   
-  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/21/hello-world/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
@@ -216,7 +213,8 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          mysql连接错误排查
+          
+            <a href="/2018/04/21/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
         </h1>
 
         <div class="post-meta">
@@ -226,7 +224,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-12-07 23:09:00" itemprop="dateCreated datePublished" datetime="2018-12-07T23:09:00+08:00">2018-12-07</time>
+              <time title="创建时间：2018-04-21 20:46:00" itemprop="dateCreated datePublished" datetime="2018-04-21T20:46:00+08:00">2018-04-21</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -234,14 +232,14 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Storage/" itemprop="url" rel="index">
-                    <span itemprop="name">Storage</span>
+                  <a href="/categories/Other/" itemprop="url" rel="index">
+                    <span itemprop="name">Other</span>
                   </a>
                 </span>
             </span>
 
           
-            <span id="/2018/12/07/mysql%E8%BF%9E%E6%8E%A5%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5/" class="post-meta-item leancloud_visitors" data-flag-title="mysql连接错误排查" title="阅读次数">
+            <span id="/2018/04/21/hello-world/" class="post-meta-item leancloud_visitors" data-flag-title="Hello World" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -258,129 +256,41 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>最近一周，MiotDungBeetleManager和MiotSpecManager偶尔发生数据库连接错误的异常。</p>
-<p>最终得出的结论是：由于我们的DAL层使用了数据库连接池&amp;&amp;我们的业务请求量比较低，导致连接池里的连接与数据库长时间没有通信，连接被数据库关掉了（mysql默认是8小时，连接不通信会被关掉）。但是被关掉的连接没有从连接池里踢掉，这些被关闭的连接与mysql通信时，发生了异常。</p>
-<p>以下是排查过程：</p>
-<p>现象：<br><img src="https://i.loli.net/2019/12/07/qmrt5PoeisJ7EOz.png" alt="image.png"></p>
-<p>找原因：</p>
-<p>1、 查看官方解释</p>
-<blockquote>
-<p>CommunicationsException源码中的解释<br>/**</p>
-<ul>
-<li>An exception to represent communications errors with the database.</li>
-<li></li>
-<li>Attempts to provide ‘friendler’ error messages to end-users, including last time a packet was sent to the database, what the client-timeout is set to, and</li>
-<li>whether the idle time has been exceeded.</li>
-<li>/<br>即是客户端与数据库通信时发发生了错误时抛出该异常。以上这个注释没有明确解释产生该异常的原因。同时官方网站也没有查到相关信息。<br>(异常日志中有以下一段，它表明客户端与数据库通信是OK的。)<br>The last packet successfully received from the server was 2,016 milliseconds ago.  The last packet sent successfully to the server was 2,009 milliseconds ago</li>
-</ul>
-</blockquote>
-<p>2、 Google</p>
-<blockquote>
-<p>大部分的信息都是说发生这个错误一般是由于客户端使的数据库连接由于与数据库长时间没有通信，连接被数据库关闭了。<br>客户端拿着一个实际已被关闭的连接与数据库通信时，会发生CommunicationsException(也许也有其它可能)。以下我们尝试以这个说法来找原因。</p>
-</blockquote>
-<p>讨论以上说法的可能性：<br>MI_DAL的数据库连接池是基于apache GenericObjectPool的封装，查看代码，连接池涉及以下几个重要参数</p>
-<table>
-<thead>
-<tr>
-<th>参数名</th>
-<th>意义</th>
-<th>我们系统的值</th>
-<th>是否能设置</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>testWhileIdle</td>
-<td>是否测试处于idle状态的连接是否还有效</td>
-<td>true</td>
-<td>N</td>
-</tr>
-<tr>
-<td>maxActive</td>
-<td>最大活跃连接数。如果当前活跃连接数已达上限，客户端再尝试从从连接池中取连接时，会抛出异常</td>
-<td>50</td>
-<td>Y</td>
-</tr>
-<tr>
-<td>maxIdle</td>
-<td>允许处于idle状态的最大连接数。当客户端处理完逻辑，往连接池归还连接时，如果连接池中的idle连接已达该值，则该连接会会被直接关闭。</td>
-<td>5</td>
-<td>Y</td>
-</tr>
-<tr>
-<td>numTestsPerEvictionRun</td>
-<td>连接池有一个后台Eviction Timer，定期检查idle状态的连接，如果检测出连接实际上已无效(已被关闭)，则会将该连接踢出连接池。该参数设置的是Timer线程每次执行时，最多能检测几个连接(即并不是是每次运行都把连接池里面的连接都检查一遍)。</td>
-<td>3</td>
-<td>N</td>
-</tr>
-<tr>
-<td>minEvictableIdleTimeMill</td>
-<td>一个连接被归还给连接池多长时间之后，才会被认为处于idle状态&amp;&amp;能够被Eviction Timer检测并踢出连接连接池</td>
-<td>10分钟</td>
-<td>N</td>
-</tr>
-<tr>
-<td>timeBetweenEvictionRunsMillis</td>
-<td>Eviction Timer的运行频率</td>
-<td>12分钟</td>
-<td>N</td>
-</tr>
-<tr>
-<td>testOnBorrow</td>
-<td>是否在每次从连接池里取出连接后都检测连接是否有效。设置为true对性能有一定影响。</td>
-<td>false</td>
-<td>N</td>
-</tr>
-</tbody></table>
-<p>(以上否能设置一列表示Mi_DAL是否有提供入口让我们设置该值)</p>
-<p>要彻底解决从连接池中取到无效连接导致SQL执行失败的问题，需要将testOnBorrow设置为true。但是MI_DAL没有提供设置该参数的入口。</p>
-<p>能够设置的参数只有maxIdle。</p>
-<p>以上参数可能造成的问题：</p>
-<p><code>axIdle(5)&gt; numTestsPerEvictionRun(3)：</code></p>
-<p>假设连接池中现在有5个连接，状态全部是idle。接着，Eviction Timer运行了一次，清理了其中3个(numTestsPerEvictionRun)。接着，来了一个SQL，直接从连接池中取了连接，这个连接实际上可能已经被数据库端关闭了，于是，就发生了以上的异常。</p>
-<p>合理的设置，应该是将numTestsPerEvictionRun设置成&gt;= maxIdle,即每次运行Eviction Timer都可以将所有的idle连接清理出连接池。</p>
-<p>由于numTestsPerEvictionRun不能设置，只能将maxIdle调小为3,以覆盖掉默认值，设置方法</p>
-<p><code>sql.socket.connect.max.idle=3</code></p>
-<p>初步结论：</p>
-<ol>
-<li>通过在JVM的启动参数中设置以下参数，可以降低出异常的可能（或者修改DAL代码，将以上几个参数暴露出来给我设置）<br><code>-Dsql.socket.connect.max.idle=3</code></li>
-<li>Eviction Timer的运行频率是12分钟，在这12分钟内，如果有SQL拿到了实际已被关闭的连接，仍然会发生异常</li>
-<li>只有将testOnBorrow设置为true,才能根绝这个问题</li>
-<li>这个问题发生的概率很低，对线上造成的影响几乎可以忽略</li>
-</ol>
+          <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
 
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+
+      
     </div>
 
     
     
     
-
       <footer class="post-footer">
-
-        
-
-          <div class="post-nav">
-            <div class="post-nav-next post-nav-item">
-                <a href="/2018/09/26/onos%E5%8A%A8%E6%80%81%E6%89%A9%E5%AE%B9%E5%AE%9E%E6%88%98%E4%B8%8E%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="onos动态扩容实战与源码分析">
-                  <i class="fa fa-chevron-left"></i> onos动态扩容实战与源码分析
-                </a>
-            </div>
-
-            <span class="post-nav-divider"></span>
-
-            <div class="post-nav-prev post-nav-item">
-                <a href="/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/" rel="prev" title="Spring Boot使用Zookeeper分发configuration">
-                  Spring Boot使用Zookeeper分发configuration <i class="fa fa-chevron-right"></i>
-                </a>
-            </div>
-          </div>
+        <div class="post-eof"></div>
       </footer>
-    
   </article>
   
   
   
 
   </div>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
+
 
 
           </div>

@@ -369,6 +369,122 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/04/RabbitMQ%E5%8F%AF%E9%9D%A0%E5%8F%91%E9%80%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
+      <meta itemprop="name" content="Esieve">
+      <meta itemprop="description" content="🐛🐛🐛">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Esieve's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/07/04/RabbitMQ%E5%8F%AF%E9%9D%A0%E5%8F%91%E9%80%81/" class="post-title-link" itemprop="url">RabbitMQ可靠发送</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-07-04 13:23:00" itemprop="dateCreated datePublished" datetime="2019-07-04T13:23:00+08:00">2019-07-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/" itemprop="url" rel="index">
+                    <span itemprop="name">MQ</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2019/07/04/RabbitMQ%E5%8F%AF%E9%9D%A0%E5%8F%91%E9%80%81/" class="post-meta-item leancloud_visitors" data-flag-title="RabbitMQ可靠发送" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>分布式事务带来复杂度的原因其实就是由于各个模块之间的通信不稳定，当我们发出一个网络请求时，可能的返回结果是成功、失败或者超时。</p>
+<p>网络无论是返回成功还是失败其实都是一个确定的结果，当网络请求超时的时候其实非常不好处理，在这时调用方并不能确定这一次请求是否送达而且不会知道请求的结果，但是 消息服务 可以保证某条信息一定会送达到调用方；大多数消息服务都会提供两种不同的 QoS ，也就是服务的等级。</p>
+<p>最常见的两种服务等级就是<code>At-Most-Once</code>和<code>At-Least-Once</code>。</p>
+<blockquote>
+<p>At-Most-Once：能够保证发送方不对接收方是否能收到消息作保证，消息要么会被投递一次，要么不会被投递，这其实跟一次普通的网络请求没有太多的区别；</p>
+</blockquote>
+<blockquote>
+<p>At-Least-Once：能够解决消息投递失败的问题，它要求发送者检查投递的结果，并在失败或者超时时重新对消息进行投递，发送者会持续对消息进行推送，直到接受者确认消息已经被收到</p>
+</blockquote>
+<p>除了这两种常见的服务等级之外，还有另一种服务等级，也就是<code>Exactly-Once</code>。通常在一些重要的业务场景中，我们需要确保消息发送的可靠性，多发和漏发都是不允许的。然而，绝对的<code>Exactly
+-Once</code>是不存在的，可以参考这篇文章<a href="https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/?utm_content=buffer39fee&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer" target="_blank" rel="noopener">You Cannot Have Exactly-Once Delivery</a></p>
+<p>但是，我们仍可以采取一些额外的补偿手段，尽可能保证消息的唯一性。下面会以RabbitMQ为例，简单介绍一下我自己的经验。</p>
+<h3 id="消息持久化"><a href="#消息持久化" class="headerlink" title="消息持久化"></a>消息持久化</h3><p>要确保消息的可靠投送，首先要保证消息队列的可靠性</p>
+<ol>
+<li>开启RabbitMQ的持久化。交换器、队列声明都要将<code>durable</code>设置为true<br>，发送消息时将deliveryMode设为2</li>
+<li>生产环境中，我们需要配置集群提高服务的稳定性和可靠性。RabbitMQ自带的cluster<br>模式有普通队列和镜像队列两种，普通队列只会在一个节点上存储消息实体，其他节点只保存消息元数据，<br>可以节省消息冗余带来的内存资源的消耗，但是其他节点的消息请求最终都会路由到master节点，<br>同时master<br>节点故障会影响整个系统的可靠性；镜像队列会在所有节点同步消息实体，增加宽带流量和内存消耗，但是系统可靠性得到增强。</li>
+<li>集群节点类型有ram、disc模式，ram节点将信息保存在内存中，重启会丢失，disc<br>节点则保存在磁盘中重启不丢失。RabbitMQ要求至少有一个disc<br>节点，否则一些操作无法执行，我们可以根据自己的业务需要，配置ram节点和disc节点的个数，兼顾系统的速度和可靠性</li>
+</ol>
+<h3 id="生产端保证"><a href="#生产端保证" class="headerlink" title="生产端保证"></a>生产端保证</h3><ol>
+<li>首先要对发送结果进行保存，不建议使用RabbitMQ的事务机制，因为会严重影响性能。<ol>
+<li>首先开启<code>publisher-confirms</code>，通过confirm callback<br>监听无法发送到exchange的消息，需要的话在之后做重试。</li>
+<li>可以选择开启<code>publisher-returns</code>和<code>mandatory</code>，这样我们可以通过return<br>callback监听到达exchange<br>却无法路由到队列的消息，这种情况不太常见，可能是路由键配错了，可以选择报警处理。</li>
+</ol>
+</li>
+</ol>
+<h3 id="消费端保证"><a href="#消费端保证" class="headerlink" title="消费端保证"></a>消费端保证</h3><ol>
+<li>首先要关闭消费端端auto ack，在业务里处理所有异常并手动ack</li>
+<li>前面生产端的重试可能导致消息的重发，比如消息发送后还未收到结果RabbitMQ就重启了。所以我们需要在消费端配合DB对消息去重，避免多发。</li>
+<li>Spring AMQP可以配置<code>ShutdownTimeout</code>，默认为5秒。在我们关闭Applicaiton的时候，consumer会停止接收消息，等待还未ack的消息处理完。这个超时时间可以根据业务去灵活调整。极端情况下没有ack的消息消息MQ会在consumer断开连接后，重新发到新的消费者，处理不好可能会导致重复消费。</li>
+<li>配置<code>spring.rabbitmq.listener.simple.prefetch</code>，每个consumer最大unack的数量，可以控制消费速率，防止积压过多的消息打挂消费者。</li>
+<li>如果消费端需要调用外部渠道，此时可能出现超时等异常，无法判断消息是否发送成功，此时一定要做好消息处理状态的记录，根据场景需要，配合报警和定时任务人工介入去补偿。</li>
+</ol>
+<h3 id="整体设计"><a href="#整体设计" class="headerlink" title="整体设计"></a>整体设计</h3><ol>
+<li>首页生产端要有一定去重能力，比如要求调用方带上一个id，防止一些调用方的异常导致消息重发。</li>
+<li>消息进来后要先落库，这样就能在整个周期追踪消息状态，并在消费端去重。</li>
+<li>每一步操作前要对数据库及时更新，对于异常状态可配合定时任务+报警去处理<ol>
+<li>比如生产中mq异步回调更新发送结果失败，可以进行重试（消费端会去重）。</li>
+<li>消费过程中，调用超时、更新操作状态失败的情况，可以报警人工处理。</li>
+</ol>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/08/Spring-Boot%E7%9B%91%E5%90%ACzookeeper%E4%BF%AE%E6%94%B9/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1048,7 +1164,7 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/07/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/11/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
@@ -1062,7 +1178,7 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
           
-            <a href="/2018/09/07/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/" class="post-title-link" itemprop="url">Raft协议为何只能有奇数个节点</a>
+            <a href="/2018/09/11/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/" class="post-title-link" itemprop="url">Raft协议为何只能有奇数个节点</a>
         </h1>
 
         <div class="post-meta">
@@ -1072,7 +1188,7 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-09-07 21:05:00" itemprop="dateCreated datePublished" datetime="2018-09-07T21:05:00+08:00">2018-09-07</time>
+              <time title="创建时间：2018-09-11 21:05:00" itemprop="dateCreated datePublished" datetime="2018-09-11T21:05:00+08:00">2018-09-11</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1087,7 +1203,7 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
             </span>
 
           
-            <span id="/2018/09/07/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/" class="post-meta-item leancloud_visitors" data-flag-title="Raft协议为何只能有奇数个节点" title="阅读次数">
+            <span id="/2018/09/11/Raft%E5%8D%8F%E8%AE%AE%E4%B8%BA%E4%BD%95%E5%8F%AA%E8%83%BD%E6%9C%89%E5%A5%87%E6%95%B0%E4%B8%AA%E8%8A%82%E7%82%B9/" class="post-meta-item leancloud_visitors" data-flag-title="Raft协议为何只能有奇数个节点" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -1353,97 +1469,12 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/21/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://i.loli.net/2019/11/09/DePahvC9zU5Tc87.jpg">
-      <meta itemprop="name" content="Esieve">
-      <meta itemprop="description" content="🐛🐛🐛">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Esieve's blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/04/21/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-04-21 20:46:00" itemprop="dateCreated datePublished" datetime="2018-04-21T20:46:00+08:00">2018-04-21</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Other/" itemprop="url" rel="index">
-                    <span itemprop="name">Other</span>
-                  </a>
-                </span>
-            </span>
-
-          
-            <span id="/2018/04/21/hello-world/" class="post-meta-item leancloud_visitors" data-flag-title="Hello World" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
 
 
 
@@ -1488,14 +1519,14 @@ ONOS_APPS=<span class="variable">${ONOS_APPS:-}</span>  <span class="comment"># 
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
